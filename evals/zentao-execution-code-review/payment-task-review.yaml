@@ -1,0 +1,11 @@
+id: payment-task-review
+artifact: zentao-execution-code-review
+prompt: >-
+  只 review 禅道任务 279：JPM DDA wire payment onboarding。baseline 里有 PR 链接。重点看资金类幂等、事务、金额和重试风险。
+expected_output: >-
+  应进入单任务审查，使用 PR diff，按 payment checklist 检查幂等、事务、金额精度、外部渠道语义、审计和测试。
+assertions:
+  - Treats this as single-task review with PR as required scope.
+  - Applies payment/money movement checklist.
+  - Checks idempotency, transaction, amount precision, retry/external-channel behavior.
+  - Applies hard gates for missing money-movement safeguards.

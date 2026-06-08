@@ -1,0 +1,12 @@
+id: spring-controller-review
+artifact: backend-reviewer
+prompt: >-
+  帮我 review 这个 Spring Boot Controller 和 Service 的改动，重点看安全、事务和线上风险。代码里新增了一个
+  /admin/users/{id}/balance 接口，可以直接修改用户余额。
+expected_output: >-
+  应识别管理员权限校验、金额校验、审计日志、事务边界、并发/幂等、敏感操作风险，并给出具体修复建议。
+assertions:
+  - Mentions authorization or admin permission checks.
+  - Mentions validation for balance amount or input.
+  - Mentions transaction/data consistency risk.
+  - Provides concrete fix suggestions, not only generic advice.

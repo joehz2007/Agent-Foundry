@@ -1,0 +1,94 @@
+id: spring-boot-developer
+type: skill
+title: Spring Boot Developer
+version: 0.1.0
+description: >-
+  Build and refactor production-quality Java/Kotlin Spring Boot code. Use whenever the user asks to implement a backend
+  feature, create or modify REST APIs, write service/repository logic, add validation, improve exception handling,
+  add tests, or refactor Spring Boot business code. Prefer this skill even when the user only says "实现这个接口" or
+  "帮我补一下业务逻辑".
+triggers:
+  - 实现功能
+  - 编写代码
+  - 开发接口
+  - 业务逻辑
+  - Spring Boot
+  - Kotlin service
+  - Java controller
+targets: [codex, pi, claude-code]
+inputs:
+  - requirements
+  - existing_code
+  - database_schema
+outputs:
+  format: markdown
+  sections:
+    - plan
+    - changes
+    - code
+    - tests
+    - risks
+platforms:
+  claude-code:
+    tools: [Read, Grep, Glob, Edit, Bash]
+instructions: |
+  Use this workflow for Spring Boot implementation tasks.
+
+  1. Understand the existing architecture before editing.
+     - Identify controller, service, repository, DTO, mapper, validation, and exception patterns already used.
+     - Follow project conventions rather than introducing a new style.
+
+  2. Design the change briefly.
+     - Name the API or business operation.
+     - Identify transaction boundaries and idempotency requirements.
+     - Identify validation, authorization, and audit/logging needs.
+
+  3. Implement in layers.
+     - Controller: thin request handling, validation, response shape.
+     - Service: business rules, transaction boundary, orchestration.
+     - Repository/Mapper: persistence only; avoid business rules here.
+     - DTO/entity conversion: keep consistent with existing code.
+
+  4. Handle errors deliberately.
+     - Use domain-specific exceptions where the project has them.
+     - Do not leak sensitive internals in API errors.
+     - Log useful context without logging secrets or personal data unnecessarily.
+
+  5. Add or update tests when feasible.
+     - Cover happy path, validation failure, permission failure, and important edge cases.
+     - Prefer focused tests that match existing test style.
+
+  6. Before finishing, self-review for:
+     - null safety
+     - transaction correctness
+     - authorization checks
+     - input validation
+     - N+1 queries and unbounded queries
+     - backward compatibility
+     - observability and error messages
+
+  Output format:
+  ## Plan
+  Brief implementation plan.
+
+  ## Changes
+  Files changed and why.
+
+  ## Code
+  Include important snippets or mention that files were edited.
+
+  ## Tests
+  State tests added/run, or explain why not run.
+
+  ## Risks
+  Mention assumptions and remaining risks.
+resources:
+  references: []
+  scripts: []
+evals:
+  - evals/spring-boot-developer/add-endpoint.yaml
+changelog:
+  - version: 0.1.0
+    date: 2026-06-05
+    changes:
+      - Initial Spring Boot development skill.

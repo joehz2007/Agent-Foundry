@@ -1,0 +1,13 @@
+id: latest-execution-audit
+artifact: zentao-execution-rd-audit
+prompt: >-
+  用 zentao-execution-rd-audit 审计最新禅道执行计划，判断任务描述是否足够支撑开发、测试和 Code Review，
+  生成主文档、changelog、五行摘要和 baseline JSON。注意检查 MCP 是否能读取评论和附件。
+expected_output: >-
+  应先锁定最新执行计划并探测 MCP 能力，输出四类文件，报告中包含数据来源与能力边界，baseline JSON 包含
+  comment_status、attachment_refs、pr_refs 等字段。
+assertions:
+  - Probes whether comments/history and attachments are actually available.
+  - Generates or describes four outputs including baseline JSON.
+  - Separates development and test task responsibility semantics.
+  - Extracts all PR refs and attachment refs rather than a boolean only.

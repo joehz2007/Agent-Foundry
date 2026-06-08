@@ -1,0 +1,11 @@
+id: missing-comments-capability
+artifact: zentao-execution-rd-audit
+prompt: >-
+  我导出了一份禅道任务列表，但没有评论和附件内容。请基于这份材料做轻量审计，说明任务是否够 review。
+expected_output: >-
+  应标注非 MCP 或材料不完整，明确评论/附件未核验，降低结论可信度，不假装已读取全部评论。
+assertions:
+  - Labels data source limitations clearly.
+  - Marks comments or attachments as unavailable/unverified.
+  - Avoids claiming all evidence was read.
+  - Provides lightweight audit table with gaps and responsibility.

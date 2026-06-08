@@ -1,0 +1,11 @@
+id: full-execution-with-missing-pr
+artifact: zentao-execution-code-review
+prompt: >-
+  基于最新 rd-audit baseline 对整个执行计划做代码审查。有些开发任务没有 PR 链接，有些任务是测试任务。
+expected_output: >-
+  应排除测试任务；全量执行时跳过缺少 PR 的开发任务并在总结中说明；对有 PR 的任务生成 review-baseline 和任务报告。
+assertions:
+  - Uses rd-audit baseline pr_refs as primary PR source.
+  - Skips missing-PR development tasks instead of using arbitrary local diff.
+  - Excludes test/verification tasks from code review by default.
+  - Produces summary, per-task reports, and review-baseline JSON.

@@ -1,0 +1,57 @@
+id: review-code
+type: command
+title: Review Code
+version: 0.1.0
+description: >-
+  Review code changes or a specified file/module and return prioritized, evidence-based findings. Use this command when
+  the user wants a quick entrypoint for PR review, bug-risk inspection, architecture review, or production readiness check.
+triggers:
+  - /review-code
+  - review this diff
+  - 帮我 review
+  - 看看这段代码有没有问题
+targets: [claude-code, codex, pi]
+inputs:
+  - path_or_diff
+  - review_focus
+outputs:
+  format: markdown
+  sections:
+    - summary
+    - findings
+    - suggested_fixes
+platforms:
+  claude-code:
+    argument_hint: "[file path, directory, or git diff] [optional focus]"
+    allowed_tools: [Read, Grep, Glob, Bash]
+instructions: |
+  Review the provided code path, diff, or module. If no target is specified, inspect the current git diff first.
+
+  Prefer using the backend-reviewer agent behavior for backend code. For frontend code, adapt the same review structure
+  to component design, state management, accessibility, security, and performance.
+
+  Steps:
+  1. Identify what changed and what the user wants reviewed.
+  2. Inspect only the necessary surrounding context.
+  3. Return prioritized findings with file/line evidence when available.
+  4. Include concrete fixes or patch examples for non-trivial issues.
+  5. Keep minor style comments short.
+
+  Output format:
+  ## Summary
+  ## Findings
+  - Severity: Critical | Important | Minor
+  - Evidence:
+  - Impact:
+  - Suggested fix:
+  ## Suggested fixes
+resources:
+  references: []
+  scripts: []
+evals:
+  - evals/review-code/basic-diff.yaml
+changelog:
+  - version: 0.1.0
+    date: 2026-06-05
+    changes:
+      - Initial code review command.

@@ -1,0 +1,11 @@
+id: basic-diff
+artifact: review-code
+prompt: >-
+  /review-code 先看当前 git diff，帮我找上线前必须修的问题，尤其是安全和数据一致性。
+expected_output: >-
+  应检查 git diff，按严重程度输出发现，给出证据、影响和建议修复。
+assertions:
+  - Attempts to inspect current git diff when no explicit file is given.
+  - Prioritizes critical and important findings.
+  - Includes evidence and impact for findings.
+  - Avoids long generic checklists.

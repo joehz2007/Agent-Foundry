@@ -1,0 +1,22 @@
+version: 0.1.0
+assets:
+  - id: backend-reviewer
+    type: agent
+    path: artifacts/agents/backend-reviewer.yaml
+    targets: [claude-code, codex, pi]
+  - id: spring-boot-developer
+    type: skill
+    path: artifacts/skills/spring-boot-developer.yaml
+    targets: [codex, pi, claude-code]
+  - id: review-code
+    type: command
+    path: artifacts/commands/review-code.yaml
+    targets: [claude-code, codex, pi]
+  - id: zentao-execution-rd-audit
+    type: skill
+    path: artifacts/skills/zentao-execution-rd-audit.yaml
+    targets: [claude-code, codex, pi]
+  - id: zentao-execution-code-review
+    type: skill
+    path: artifacts/skills/zentao-execution-code-review.yaml
+    targets: [claude-code, codex, pi]

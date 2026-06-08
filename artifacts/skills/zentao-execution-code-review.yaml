@@ -1,0 +1,110 @@
+id: zentao-execution-code-review
+type: skill
+title: ZenTao Execution Code Review
+version: 1.0.0
+description: >-
+  Perform task-aligned code review using ZenTao execution plans and the rd-audit baseline. Use whenever the user asks to
+  review code against 禅道任务, 执行计划, PR links in ZenTao, baseline JSON, or whether implementation matches task
+  requirements. This skill requires PR evidence for included development/code tasks; full-execution review skips tasks
+  without reliable PRs, while single-task review stops and asks for a PR. Prefer this over generic code review when a
+  ZenTao task, execution, baseline, or PR-to-task mapping is involved.
+triggers:
+  - 按禅道任务 review 代码
+  - 对照 baseline review
+  - 检查代码是否满足执行计划
+  - 禅道 PR 代码审查
+  - 任务对齐型 Code Review
+  - zentao code review
+  - review-baseline
+targets: [claude-code, codex, pi]
+inputs:
+  - rd_audit_baseline_json
+  - zentao_task_or_execution
+  - pr_links
+  - repository_or_diff
+outputs:
+  format: markdown_and_json
+  sections:
+    - summary_report
+    - per_task_reports
+    - review_baseline_json
+platforms:
+  claude-code:
+    tools: [Read, Grep, Glob, Bash, Write]
+instructions: |
+  You perform code review against ZenTao task facts. The core question is: does the actual code change satisfy the task
+  baseline without introducing extra, unmapped, or risky behavior?
+
+  Responsibility boundary:
+  - `zentao-execution-rd-audit` owns the fact-layer baseline: task requirements, acceptance criteria, risks, attachments,
+    and PR references.
+  - This skill owns the interpretation layer: task type, expected code changes, anti-pattern scans, reachability checks,
+    PR-to-task mapping, and review conclusions.
+  - Never modify rd-audit baseline JSON. Write derived fields only to `review-baseline.json`.
+
+  Modes:
+  - quick: PR mapping + changed files + blocking/high risks only.
+  - standard: default; expected changes + key anti-patterns + relevant tests.
+  - deep: full checklist, external docs/version checks, broader reverse mapping. Use only when requested or needed for
+    high-risk migration/payment/security tasks.
+
+  Workflow:
+  1. Lock review scope.
+     - Prefer rd-audit `*-baseline.json`. If absent, ask to run rd-audit or proceed conservatively only if the user insists.
+     - Determine full-execution vs single-task mode.
+     - Exclude QA/test/verification/regression/canceled tasks from code review unless the user explicitly asks to review test code.
+
+  2. Require PR evidence.
+     - Read PRs first from rd-audit baseline `pr_refs`.
+     - If missing or suspected incomplete, re-extract from task body, task `raw.actions[].comment`, story body,
+       story `raw.actions[].comment`, and attachment text when available; then use user-provided PRs.
+     - Full execution: skip only tasks with missing or unreliable PR and record them in `排除任务`.
+     - Single task: missing or unreliable PR stops the review with a clear request for a PR link/ID.
+     - Do not replace a missing PR with arbitrary local diff, branch diff, time-window commits, or keyword search.
+
+  3. Derive review-baseline.
+     - Follow `review-baseline-schema.md`.
+     - Classify task types using `task-type-checklists.md`; multiple types may apply.
+     - Derive `expected_changes`, `anti_pattern_targets`, `reachability_targets`, `scope_modules`, and hard gates.
+     - Set `code_scope_confidence` based on PR/diff/repository completeness.
+
+  4. Review code.
+     - Read PR diff and necessary surrounding code. Do not review the whole repository by default.
+     - Map each task requirement and acceptance criterion to code evidence or a gap.
+     - Execute anti-pattern grep/static scans appropriate to the selected mode and task type.
+     - Check reachability/wiring for configuration, beans, routes, feature flags, and utilities when relevant.
+     - Evaluate tests: unit, integration, API, UI, or regression depending on task risk.
+     - Perform reverse mapping: code changes inside reviewed PRs must be either task-aligned, task-extraneous, orphan, or no-business-risk.
+
+  5. Conclude with hard gates.
+     - Use `review-rubric.md`.
+     - If a hard gate is triggered, do not soften the conclusion to `有条件通过`.
+     - If evidence is incomplete, cap the conclusion and explain the limitation.
+
+  6. Save reports.
+     - Use `report-structure.md`.
+     - Full execution: create one directory containing `_summary.md`, one `task-<id>-<slug>.md` per included development/code task,
+       and `review-baseline.json`.
+     - Single task: create one directory containing `_summary.md` and `review-baseline.json`.
+     - Final reply should contain the report directory, `_summary.md` path, task file list, and a very short conclusion.
+
+  Important compatibility rule:
+  - Prefer fetch/context7 MCP for external docs when available. If tool names differ or external tools are unavailable,
+    use equivalent web/fetch tools or mark external evidence as unverified. Do not assume `WebFetch` exists on every platform.
+resources:
+  references:
+    - references/zentao-execution-code-review/review-baseline-schema.md
+    - references/zentao-execution-code-review/task-type-checklists.md
+    - references/zentao-execution-code-review/review-rubric.md
+    - references/zentao-execution-code-review/report-structure.md
+  scripts: []
+evals:
+  - evals/zentao-execution-code-review/full-execution-with-missing-pr.yaml
+  - evals/zentao-execution-code-review/payment-task-review.yaml
+changelog:
+  - version: 1.0.0
+    date: 2026-06-05
+    changes:
+      - Rewritten in Agent Foundry neutral artifact format.
+      - Prioritizes rd-audit pr_refs and enforces PR requirement by review mode.
+      - Adds quick/standard/deep modes and broader task-type checklists.

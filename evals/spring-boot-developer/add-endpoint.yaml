@@ -1,0 +1,12 @@
+id: add-endpoint
+artifact: spring-boot-developer
+prompt: >-
+  在现有 Spring Boot 项目里帮我实现一个创建退款单接口，要求校验订单状态、避免重复退款、写入退款记录，
+  并补一下必要测试。你可以先看项目结构再改。
+expected_output: >-
+  应按 Controller/Service/Repository 分层实现，考虑事务、幂等、状态校验、异常处理和测试。
+assertions:
+  - Inspects or follows existing project structure.
+  - Includes idempotency or duplicate refund protection.
+  - Defines transaction boundary in service layer.
+  - Adds or discusses tests for success and failure paths.

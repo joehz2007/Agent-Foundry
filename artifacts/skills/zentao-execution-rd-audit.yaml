@@ -1,0 +1,107 @@
+id: zentao-execution-rd-audit
+type: skill
+title: ZenTao Execution RD Audit
+version: 1.0.0
+description: >-
+  Audit ZenTao execution plans, iterations, tasks, stories, comments, PR links, and attachments to decide whether task
+  descriptions are sufficient for development, testing, and code review. Use whenever the user asks about 禅道任务,
+  执行计划, 迭代审计, 任务描述是否够开发/测试/review, 生成研发基线, 对比上次审计, or preparing a baseline for
+  ZenTao-based code review. Prefer this skill for execution-plan quality assessment even when the user only asks to
+  “看看最新迭代任务是否清楚”.
+triggers:
+  - 禅道任务审计
+  - 执行计划审计
+  - 迭代任务是否够开发
+  - 任务描述是否足够测试
+  - 生成研发基线
+  - 对比上次审计
+  - ZenTao execution audit
+  - zentao baseline
+targets: [claude-code, codex, pi]
+inputs:
+  - zentao_project_or_execution
+  - mcp_tool_results
+  - previous_audit_reports
+  - exported_task_files
+outputs:
+  format: markdown_and_json
+  sections:
+    - main_audit_report
+    - changelog
+    - five_line_summary
+    - baseline_json
+platforms:
+  claude-code:
+    tools: [Read, Grep, Glob, Bash, Write]
+instructions: |
+  You audit ZenTao execution plans into an engineering baseline. Your job is not to judge people; your job is to make
+  task facts reliable enough for development, testing, and code review.
+
+  First choose the mode:
+  - Full audit: user asks for an execution/iteration audit or baseline; generate four files.
+  - Lightweight audit: user asks about one task or a few tasks; answer in the conversation unless files are requested.
+  - Comparison audit: previous reports exist or user asks for progress; compare against the latest previous report.
+
+  Core principles:
+  1. Pull facts before conclusions. Prefer ZenTao MCP when available.
+  2. Probe MCP capability before assuming attachment content can be read. Follow `mcp-capability.md`.
+  3. In current `zentaomcp`, task/story comments and history are available through `zentao_get_task(...).data.raw.actions[]`
+     and `zentao_get_story(...).data.raw.actions[]`. Read every action; non-empty `actions[].comment` is comment evidence.
+  4. Treat task body, action comments/history, linked story, story action comments/history, and accessible attachments as
+     evidence. If any source is unavailable, mark it as unavailable instead of pretending it was reviewed.
+  5. Extract all PR links and PR identifiers from task/story bodies and all action comments into `pr_refs`; do not keep only the last one.
+  6. Extract all attachment references into `attachment_refs`; do not only write `has attachment`.
+  7. Keep rd-audit baseline factual. Do not add code-review interpretation fields such as `task_type` or `expected_changes`.
+
+  Workflow:
+  1. Lock the audit target.
+     - If the user specifies projectId, executionId, taskId, or file path, use it.
+     - Otherwise identify the latest active project and latest active execution through ZenTao MCP.
+     - Record project, execution, period, status, progress, and task count.
+
+  2. Read data and capability status.
+     - Check whether task body, `task.raw.actions`, story body, `story.raw.actions`, task attachments, and story attachments are available.
+     - Extract comments/history from `raw.actions[]`; do not require a standalone comments tool.
+     - Record capability status in the main report and baseline JSON.
+     - If MCP is unavailable, ask for exported files or proceed only when the user supplied local data; label the result
+       as non-MCP and lower confidence.
+
+  3. Evaluate each task.
+     - Split `devel` and `test` tasks. For `devel`, `assignedTo` means development owner. For `test`, it means testing owner.
+     - Rate with `A/B/C/N/A` using `rubric.md`.
+     - For each gap, identify product/development/testing responsibility when evidence supports it; otherwise write `待定`.
+     - Determine whether the task can support development, code review, and test design separately.
+
+  4. Build outputs.
+     - Full audit creates exactly four files by default: main report, changelog, five-line summary, and baseline JSON.
+     - Use `report-structure.md` for section order and table columns.
+     - Use `baseline-schema.md` for JSON fields and status values.
+     - If comparing with a previous report, only list real rating changes in `本次评级变化`; put older/non-window fixes under
+       `历史关键修正`.
+
+  5. Final response.
+     - List generated file paths.
+     - Give a short readiness conclusion and the top 3 gaps.
+     - Mention any evidence that could not be read, especially missing `raw.actions` or attachments.
+
+  Lightweight audit output:
+  | 任务 | 等级 | 是否有附件 | 是否有PR | 可开发 | 可Review | 可写测试 | 主要缺口 | 应补责任方 |
+
+  Use concise Markdown tables. Avoid long narrative unless explaining data limitations.
+resources:
+  references:
+    - references/zentao-execution-rd-audit/mcp-capability.md
+    - references/zentao-execution-rd-audit/rubric.md
+    - references/zentao-execution-rd-audit/report-structure.md
+    - references/zentao-execution-rd-audit/baseline-schema.md
+  scripts: []
+evals:
+  - evals/zentao-execution-rd-audit/latest-execution.yaml
+  - evals/zentao-execution-rd-audit/missing-comments.yaml
+changelog:
+  - version: 1.0.0
+    date: 2026-06-05
+    changes:
+      - Rewritten in Agent Foundry neutral artifact format.
+      - Added explicit MCP capability probing and comment/attachment status handling.
+      - Standardized four output files and baseline JSON contract.
