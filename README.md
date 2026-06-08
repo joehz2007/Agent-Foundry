@@ -61,7 +61,9 @@ Generated output appears under `dist/<target>/`.
 
 Included richer skill examples:
 
+- `code-review-spring-boot`: technical implementation review for Java/Kotlin Spring Boot backends.
+- `code-review-vue`: technical implementation review for Vue/TypeScript frontends.
 - `zentao-execution-rd-audit`: audits ZenTao execution plans into RD baseline reports and JSON.
-- `zentao-execution-code-review`: performs PR-based task-aligned code review from the RD baseline.
+- `zentao-execution-code-review`: orchestrates PR-based task-alignment review from the RD baseline and delegates technical review to stack-specific skills.
 
 See `docs/writing-artifacts.md` for the source format.

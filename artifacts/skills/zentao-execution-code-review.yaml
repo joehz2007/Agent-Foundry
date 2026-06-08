@@ -32,21 +32,24 @@ platforms:
   claude-code:
     tools: [Read, Grep, Glob, Bash, Write]
 instructions: |
-  You perform code review against ZenTao task facts. The core question is: does the actual code change satisfy the task
-  baseline without introducing extra, unmapped, or risky behavior?
+  You orchestrate code review against ZenTao task facts. Your core question is: does the actual code change satisfy the
+  task baseline without introducing extra, unmapped, or risky behavior? You own business/task alignment. Delegate deep
+  backend/frontend technical implementation review to specialized code-review skills.
 
   Responsibility boundary:
   - `zentao-execution-rd-audit` owns the fact-layer baseline: task requirements, acceptance criteria, risks, attachments,
     and PR references.
-  - This skill owns the interpretation layer: task type, expected code changes, anti-pattern scans, reachability checks,
-    PR-to-task mapping, and review conclusions.
+  - This skill owns the interpretation layer: task type, expected business changes, PR-to-task mapping, reverse mapping,
+    task-alignment conclusions, and final report integration.
+  - `code-review-spring-boot` owns Spring Boot backend technical implementation review.
+  - `code-review-vue` owns Vue frontend technical implementation review.
   - Never modify rd-audit baseline JSON. Write derived fields only to `review-baseline.json`.
 
   Modes:
-  - quick: PR mapping + changed files + blocking/high risks only.
-  - standard: default; expected changes + key anti-patterns + relevant tests.
-  - deep: full checklist, external docs/version checks, broader reverse mapping. Use only when requested or needed for
-    high-risk migration/payment/security tasks.
+  - quick: PR mapping + task acceptance alignment + obvious blocking findings only.
+  - standard: default; task alignment + reverse mapping + delegated Spring Boot/Vue technical review for touched code.
+  - deep: standard mode plus broader reverse mapping and deeper delegated technical reviews. Use only when requested or
+    needed for high-risk migration/payment/security tasks.
 
   Workflow:
   1. Lock review scope.
@@ -68,17 +71,19 @@ instructions: |
      - Derive `expected_changes`, `anti_pattern_targets`, `reachability_targets`, `scope_modules`, and hard gates.
      - Set `code_scope_confidence` based on PR/diff/repository completeness.
 
-  4. Review code.
-     - Read PR diff and necessary surrounding code. Do not review the whole repository by default.
+  4. Review task alignment and delegate technical review.
+     - Read PR diff enough to map changed files to tasks and acceptance criteria. Do not review the whole repository by default.
      - Map each task requirement and acceptance criterion to code evidence or a gap.
-     - Execute anti-pattern grep/static scans appropriate to the selected mode and task type.
-     - Check reachability/wiring for configuration, beans, routes, feature flags, and utilities when relevant.
-     - Evaluate tests: unit, integration, API, UI, or regression depending on task risk.
+     - Classify changed files and delegate technical implementation review according to `technical-delegation.md`:
+       - Spring Boot / Java / Kotlin / MyBatis / backend config -> `code-review-spring-boot`.
+       - Vue / TypeScript / Vite / Element Plus / frontend route/store/API files -> `code-review-vue`.
+     - Consume delegated findings as technical findings; map them back to task IDs when possible.
      - Perform reverse mapping: code changes inside reviewed PRs must be either task-aligned, task-extraneous, orphan, or no-business-risk.
 
-  5. Conclude with hard gates.
+  5. Conclude with alignment and technical findings separated.
      - Use `review-rubric.md`.
-     - If a hard gate is triggered, do not soften the conclusion to `有条件通过`.
+     - Keep business-alignment problems separate from delegated technical implementation problems.
+     - If a technical finding prevents task acceptance or triggers a hard gate, reflect that in the final task conclusion.
      - If evidence is incomplete, cap the conclusion and explain the limitation.
 
   6. Save reports.
@@ -97,11 +102,18 @@ resources:
     - references/zentao-execution-code-review/task-type-checklists.md
     - references/zentao-execution-code-review/review-rubric.md
     - references/zentao-execution-code-review/report-structure.md
+    - references/zentao-execution-code-review/technical-delegation.md
   scripts: []
 evals:
   - evals/zentao-execution-code-review/full-execution-with-missing-pr.yaml
   - evals/zentao-execution-code-review/payment-task-review.yaml
 changelog:
+  - version: 1.1.0
+    date: 2026-06-08
+    changes:
+      - Refocused as a ZenTao task-alignment orchestrator.
+      - Delegates Spring Boot technical review to code-review-spring-boot.
+      - Delegates Vue technical review to code-review-vue.
   - version: 1.0.0
     date: 2026-06-05
     changes:

@@ -8,6 +8,14 @@ assets:
     type: skill
     path: artifacts/skills/spring-boot-developer.yaml
     targets: [codex, pi, claude-code]
+  - id: code-review-spring-boot
+    type: skill
+    path: artifacts/skills/code-review-spring-boot.yaml
+    targets: [claude-code, codex, pi]
+  - id: code-review-vue
+    type: skill
+    path: artifacts/skills/code-review-vue.yaml
+    targets: [claude-code, codex, pi]
   - id: review-code
     type: command
     path: artifacts/commands/review-code.yaml

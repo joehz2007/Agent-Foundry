@@ -1,0 +1,77 @@
+id: code-review-spring-boot
+type: skill
+title: Spring Boot Code Review
+version: 0.1.0
+description: >-
+  Review Java/Kotlin Spring Boot backend code for production-grade technical correctness: API/controller design,
+  service-layer business logic, transaction boundaries, idempotency, SQL/repository safety, authorization, validation,
+  exception handling, observability, configuration, and tests. Use whenever the user asks to review Spring Boot,
+  springboot, Java backend, Kotlin backend, MyBatis/JPA, REST API, payment/refund backend, actuator/config, or server-side
+  implementation quality, even when the request is part of a larger ZenTao or PR review.
+triggers:
+  - Spring Boot code review
+  - springboot review
+  - Java 后端代码审查
+  - Kotlin 后端代码审查
+  - 后端技术审计
+  - MyBatis review
+  - 事务 幂等 review
+  - 支付 后端 review
+targets: [claude-code, codex, pi]
+inputs:
+  - repository
+  - pr_diff
+  - changed_files
+  - task_context
+outputs:
+  format: markdown_and_json
+  sections:
+    - review_scope
+    - technical_conclusion
+    - findings
+    - tests
+    - json_summary
+platforms:
+  claude-code:
+    tools: [Read, Grep, Glob, Bash]
+instructions: |
+  Review Spring Boot backend code as a technical reviewer. Focus on confirmed implementation risks rather than task
+  management. If the caller is an orchestrator such as `zentao-execution-code-review`, return findings that can be mapped
+  back to task IDs, but do not decide whether the PR satisfies the ZenTao task; that is the orchestrator's job.
+
+  Workflow:
+  1. Lock the code scope.
+     - Prefer PR diff or explicitly provided files.
+     - Do not review the whole repository unless asked.
+     - Read surrounding controller/service/repository/config/test files needed to understand the changed code.
+
+  2. Review by backend dimensions.
+     - API/controller: validation, auth, response compatibility, error handling.
+     - Service/business logic: transaction boundary, idempotency, state transitions, external side effects.
+     - Persistence: tenant/merchant/user isolation, SQL correctness, indexes, N+1, unbounded queries.
+     - Security: authorization, sensitive data, secrets, unsafe crypto/TLS.
+     - Observability/config: logs, metrics, actuator exposure, safe defaults.
+     - Tests: meaningful coverage for success, failure, boundary, retry, rollback, and authorization paths.
+
+  3. Prioritize findings.
+     - Report concrete file/line evidence when available.
+     - Explain impact and a specific fix.
+     - Do not list generic checklist items with no evidence.
+     - Apply hard gates from `checklist.md` for money movement, authorization, and consistency risks.
+
+  4. Output.
+     - Use `report-structure.md`.
+     - Include a JSON-compatible summary when the result may be consumed by another skill.
+     - If tests were not run or repository context is incomplete, state limitations and cap confidence.
+resources:
+  references:
+    - references/code-review-spring-boot/checklist.md
+    - references/code-review-spring-boot/report-structure.md
+  scripts: []
+evals:
+  - evals/code-review-spring-boot/refund-transaction.yaml
+changelog:
+  - version: 0.1.0
+    date: 2026-06-08
+    changes:
+      - Initial Spring Boot technical code review skill.

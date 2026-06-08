@@ -1,0 +1,79 @@
+id: code-review-vue
+type: skill
+title: Vue Code Review
+version: 0.1.0
+description: >-
+  Review Vue 2/Vue 3 frontend code, TypeScript, Vite/Webpack, Element Plus/Element UI, forms, routes, permissions,
+  component design, state management, API integration, UX states, accessibility basics, and frontend regression risks.
+  Use whenever the user asks to review Vue, Vue3, TypeScript frontend, Element Plus forms/tables/dialogs, merchant/admin
+  portal UI changes, frontend permissions, or frontend implementation quality, even when the request is part of a larger
+  ZenTao or PR review.
+triggers:
+  - Vue code review
+  - Vue3 review
+  - 前端代码审查
+  - TypeScript 前端 review
+  - Element Plus review
+  - 表单校验 review
+  - 前端权限 review
+  - 商户端 前端 review
+targets: [claude-code, codex, pi]
+inputs:
+  - repository
+  - pr_diff
+  - changed_files
+  - task_context
+outputs:
+  format: markdown_and_json
+  sections:
+    - review_scope
+    - technical_conclusion
+    - findings
+    - tests
+    - json_summary
+platforms:
+  claude-code:
+    tools: [Read, Grep, Glob, Bash]
+instructions: |
+  Review Vue frontend code as a technical reviewer. Focus on implementation quality and frontend production risks. If
+  the caller is an orchestrator such as `zentao-execution-code-review`, return technical findings that can be mapped back
+  to task IDs, but do not decide whether the PR satisfies the ZenTao task; that is the orchestrator's job.
+
+  Workflow:
+  1. Lock the code scope.
+     - Prefer PR diff or explicitly provided files.
+     - Read related components, composables, API modules, stores, routes, permission utilities, and tests needed to
+       understand the change.
+     - Do not review the whole frontend repository unless asked.
+
+  2. Review by frontend dimensions.
+     - Component design: responsibility, props/events, composition API, cleanup.
+     - API/state flow: request/response mapping, loading/error/empty states, stale state, refresh behavior.
+     - Forms: validation, readonly/edit modes, duplicate submit, approval/review flows.
+     - Permission/security: frontend permission as UX only, sensitive data masking, route/action visibility.
+     - UX/regression: dialogs, tables, pagination, exports, mobile/scan flows, existing page behavior.
+     - Tests: component/unit/E2E/manual regression evidence for critical flows.
+
+  3. Prioritize findings.
+     - Report concrete file/component evidence.
+     - Explain user impact and a specific fix.
+     - Avoid generic style comments unless they affect maintainability or correctness.
+     - Apply hard gates from `checklist.md` for permissions, contract mismatches, stale/duplicate submit, and missing
+       acceptance behavior.
+
+  4. Output.
+     - Use `report-structure.md`.
+     - Include a JSON-compatible summary when the result may be consumed by another skill.
+     - If backend contract or runtime context is missing, state limitations.
+resources:
+  references:
+    - references/code-review-vue/checklist.md
+    - references/code-review-vue/report-structure.md
+  scripts: []
+evals:
+  - evals/code-review-vue/sales-unit-form.yaml
+changelog:
+  - version: 0.1.0
+    date: 2026-06-08
+    changes:
+      - Initial Vue technical code review skill.

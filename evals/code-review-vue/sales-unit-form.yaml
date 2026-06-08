@@ -1,0 +1,11 @@
+id: sales-unit-form-review
+artifact: code-review-vue
+prompt: >-
+  用 code-review-vue review 商户详情页修改销售单元的前端 PR，重点看表单校验、只读页面、复核流、API 错误处理和回归风险。
+expected_output: >-
+  应聚焦 Vue/TypeScript 前端实现，检查组件状态、表单规则、编辑/只读模式、复核流交互、API 字段和错误状态、测试或回归建议。
+assertions:
+  - Reviews form validation and edit/readonly mode behavior.
+  - Reviews API request/response mapping and error handling.
+  - Reviews permission/approval flow frontend risks.
+  - Provides concrete component/file-level findings and fixes.

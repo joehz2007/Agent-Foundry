@@ -27,12 +27,13 @@ reports/zentao-code-review/
 4. 比较条件与限制
 5. 任务到代码映射
 6. 任务结论总览
-7. 排除任务
-8. 反向映射核对
-9. 未映射改动（非代码改动）
-10. 反模式扫描结果
-11. 阻塞问题总览
-12. 一句话结论
+7. 委托技术审计结果汇总
+8. 排除任务
+9. 反向映射核对
+10. 未映射改动（非代码改动）
+11. 反模式扫描结果
+12. 阻塞问题总览
+13. 一句话结论
 
 ## Task report sections
 
@@ -77,6 +78,12 @@ Task ID should link to the task report when a report exists.
 ### 任务结论总览
 
 | 任务ID | 任务标题 | 结论 | 实现一致性 | 主要代码问题 | 架构/路径/算法结论 | 来源 |
+
+### 委托技术审计结果汇总
+
+| 技术栈 | 委托 skill | 范围 | 技术结论 | 高风险发现 | 影响任务 |
+
+Use rows for `code-review-spring-boot` and/or `code-review-vue` when delegated reviews were run. If no technical delegation was needed, write `无`.
 
 ### 排除任务
 

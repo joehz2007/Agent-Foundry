@@ -1,0 +1,11 @@
+id: refund-transaction-review
+artifact: code-review-spring-boot
+prompt: >-
+  用 code-review-spring-boot review 这个 Spring Boot 退款接口 PR，重点看事务、幂等、金额精度、权限和测试。
+expected_output: >-
+  应聚焦后端技术实现，检查 Controller/Service/Repository、事务边界、重复退款保护、金额类型、权限隔离、异常处理和测试证据。
+assertions:
+  - Reviews transaction boundary and rollback behavior.
+  - Reviews idempotency or duplicate refund protection.
+  - Reviews authorization/tenant or merchant isolation.
+  - Provides concrete findings with evidence and fixes, not generic checklist text.
