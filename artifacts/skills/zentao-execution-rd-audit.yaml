@@ -44,7 +44,7 @@ instructions: |
 
   Core principles:
   1. Pull facts before conclusions. Prefer ZenTao MCP when available.
-  2. Probe MCP capability before assuming attachment content can be read. Follow `mcp-capability.md`.
+  2. Probe MCP capability before assuming attachment content can be read. Follow `references/mcp-capability.md`.
   3. In current `zentaomcp`, task/story comments and history are available through `zentao_get_task(...).data.raw.actions[]`
      and `zentao_get_story(...).data.raw.actions[]`. Read every action; non-empty `actions[].comment` is comment evidence.
   4. Treat task body, action comments/history, linked story, story action comments/history, and accessible attachments as
@@ -68,14 +68,14 @@ instructions: |
 
   3. Evaluate each task.
      - Split `devel` and `test` tasks. For `devel`, `assignedTo` means development owner. For `test`, it means testing owner.
-     - Rate with `A/B/C/N/A` using `rubric.md`.
+     - Rate with `A/B/C/N/A` using `references/rubric.md`.
      - For each gap, identify product/development/testing responsibility when evidence supports it; otherwise write `待定`.
      - Determine whether the task can support development, code review, and test design separately.
 
   4. Build outputs.
      - Full audit creates exactly four files by default: main report, changelog, five-line summary, and baseline JSON.
-     - Use `report-structure.md` for section order and table columns.
-     - Use `baseline-schema.md` for JSON fields and status values.
+     - Use `references/report-structure.md` for section order and table columns.
+     - Use `references/baseline-schema.md` for JSON fields and status values.
      - If comparing with a previous report, only list real rating changes in `本次评级变化`; put older/non-window fixes under
        `历史关键修正`.
 

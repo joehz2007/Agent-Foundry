@@ -70,9 +70,9 @@ def artifact_body(artifact: dict[str, Any], *, heading: str | None = None) -> st
     if references or scripts:
         parts += ["## Bundled resources", ""]
         for ref in references:
-            parts.append(f"- Reference: `{ref}`")
+            parts.append(f"- Reference: `{resource_output_path(artifact, ref)}`")
         for script in scripts:
-            parts.append(f"- Script: `{script}`")
+            parts.append(f"- Script: `{resource_output_path(artifact, script)}`")
         parts.append("")
 
     return "\n".join(parts).rstrip() + "\n"
@@ -84,13 +84,25 @@ def write_file(path: Path, content: str) -> None:
     print(f"wrote {path.relative_to(ROOT)}")
 
 
-def copy_resources(artifact: dict[str, Any], output_dir: Path) -> None:
-    """Copy bundled references/scripts next to generated skill files.
+def resource_output_path(artifact: dict[str, Any], resource: str) -> str:
+    """Return the resource path as it should appear inside a generated skill.
 
-    Resource paths stay relative to the repository root and are copied with the
-    same relative path under the target skill directory. This keeps links in the
-    generated Markdown stable across targets.
+    Source resources are commonly organized as `references/<artifact-id>/file.md`
+    in the Agent Foundry repository. Generated skills already live in a directory
+    named after the artifact, so repeating the artifact id under `references/` is
+    redundant and makes in-skill links harder to follow. Strip that redundant
+    segment for generated outputs.
     """
+    artifact_id = artifact["id"]
+    for base in ("references", "scripts"):
+        prefix = f"{base}/{artifact_id}/"
+        if resource.startswith(prefix):
+            return f"{base}/{resource[len(prefix):]}"
+    return resource
+
+
+def copy_resources(artifact: dict[str, Any], output_dir: Path) -> None:
+    """Copy bundled references/scripts next to generated skill files."""
     resources = artifact.get("resources") or {}
     if not isinstance(resources, dict):
         return
@@ -99,7 +111,7 @@ def copy_resources(artifact: dict[str, Any], output_dir: Path) -> None:
             src = ROOT / resource
             if not src.exists():
                 continue
-            dest = output_dir / resource
+            dest = output_dir / resource_output_path(artifact, resource)
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dest)
             print(f"copied {src.relative_to(ROOT)} -> {dest.relative_to(ROOT)}")
@@ -124,6 +136,8 @@ def build_claude_code(artifact: dict[str, Any]) -> None:
             "name": platform.get("name", artifact["id"]),
             "description": artifact["description"],
         }
+        if platform.get("tools"):
+            frontmatter["allowed-tools"] = platform["tools"]
         content = f"---\n{dump_frontmatter(frontmatter)}\n---\n\n{artifact_body(artifact)}"
         output_dir = ROOT / "dist" / "claude-code" / ".claude" / "skills" / artifact["id"]
         write_file(output_dir / "SKILL.md", content)

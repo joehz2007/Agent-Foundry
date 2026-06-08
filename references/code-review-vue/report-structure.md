@@ -25,12 +25,12 @@ Use Markdown. Keep findings concrete and tied to files/components/routes.
 
 | 维度 | 结论 | 说明 |
 |---|---|---|
-| 组件设计 | 通过/有条件/不通过/无法判断 |  |
-| API/状态流 | 通过/有条件/不通过/无法判断 |  |
-| 表单/校验 | 通过/有条件/不通过/无法判断 |  |
-| 权限/安全 | 通过/有条件/不通过/无法判断 |  |
-| UX/回归 | 通过/有条件/不通过/无法判断 |  |
-| 测试 | 通过/有条件/不通过/无法判断 |  |
+| 组件设计 | 通过/有条件通过/不通过/无法判断 |  |
+| API/状态流 | 通过/有条件通过/不通过/无法判断 |  |
+| 表单/校验 | 通过/有条件通过/不通过/无法判断 |  |
+| 权限/安全 | 通过/有条件通过/不通过/无法判断 |  |
+| UX/回归 | 通过/有条件通过/不通过/无法判断 |  |
+| 测试 | 通过/有条件通过/不通过/无法判断 |  |
 | 总体结论 | 通过/有条件通过/不通过/无法判断 |  |
 
 ## Findings table
@@ -46,10 +46,12 @@ When another orchestrator skill needs to consume the result, include or save a J
 {
   "audit_type": "code-review-vue",
   "scope": [],
-  "technical_conclusion": "有条件通过",
+  "technical_conclusion": "conditional",
+  "technical_conclusion_label": "有条件通过",
   "findings": [
     {
-      "severity": "中",
+      "severity": "medium",
+      "severity_label": "中",
       "file": "...",
       "line": "...",
       "issue": "...",
@@ -62,3 +64,10 @@ When another orchestrator skill needs to consume the result, include or save a J
   "limitations": []
 }
 ```
+
+Machine-readable enum values:
+
+- `technical_conclusion`: `pass | conditional | fail | unknown`
+- `severity`: `blocker | high | medium | low`
+
+Use Chinese labels only in Markdown tables or `*_label` fields.

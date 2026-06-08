@@ -39,6 +39,11 @@ instructions: |
   management. If the caller is an orchestrator such as `zentao-execution-code-review`, return findings that can be mapped
   back to task IDs, but do not decide whether the PR satisfies the ZenTao task; that is the orchestrator's job.
 
+  Default output language is Chinese. Use stable English enum values only in machine-readable JSON.
+  Bash is allowed for read-only inspection and project-local verification commands such as `git diff`, `git grep`,
+  dependency tree, typecheck, and tests. Keep commands scoped to the reviewed repository; do not modify files unless the
+  user explicitly asks for fixes.
+
   Workflow:
   1. Lock the code scope.
      - Prefer PR diff or explicitly provided files.
@@ -57,10 +62,10 @@ instructions: |
      - Report concrete file/line evidence when available.
      - Explain impact and a specific fix.
      - Do not list generic checklist items with no evidence.
-     - Apply hard gates from `checklist.md` for money movement, authorization, and consistency risks.
+     - Apply hard gates from `references/checklist.md` for money movement, authorization, and consistency risks.
 
   4. Output.
-     - Use `report-structure.md`.
+     - Use `references/report-structure.md`.
      - Include a JSON-compatible summary when the result may be consumed by another skill.
      - If tests were not run or repository context is incomplete, state limitations and cap confidence.
 resources:

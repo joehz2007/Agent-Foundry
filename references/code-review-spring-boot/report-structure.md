@@ -25,11 +25,11 @@ Use Markdown. Keep findings evidence-based and prioritize issues that should cha
 
 | 维度 | 结论 | 说明 |
 |---|---|---|
-| API/Controller | 通过/有条件/不通过/无法判断 |  |
-| Service/事务/幂等 | 通过/有条件/不通过/无法判断 |  |
-| SQL/Repository | 通过/有条件/不通过/无法判断 |  |
-| 安全 | 通过/有条件/不通过/无法判断 |  |
-| 测试 | 通过/有条件/不通过/无法判断 |  |
+| API/Controller | 通过/有条件通过/不通过/无法判断 |  |
+| Service/事务/幂等 | 通过/有条件通过/不通过/无法判断 |  |
+| SQL/Repository | 通过/有条件通过/不通过/无法判断 |  |
+| 安全 | 通过/有条件通过/不通过/无法判断 |  |
+| 测试 | 通过/有条件通过/不通过/无法判断 |  |
 | 总体结论 | 通过/有条件通过/不通过/无法判断 |  |
 
 ## Findings table
@@ -52,10 +52,12 @@ When another orchestrator skill needs to consume the result, include or save a J
 {
   "audit_type": "code-review-spring-boot",
   "scope": [],
-  "technical_conclusion": "有条件通过",
+  "technical_conclusion": "conditional",
+  "technical_conclusion_label": "有条件通过",
   "findings": [
     {
-      "severity": "高",
+      "severity": "high",
+      "severity_label": "高",
       "file": "...",
       "line": "...",
       "issue": "...",
@@ -68,3 +70,10 @@ When another orchestrator skill needs to consume the result, include or save a J
   "limitations": []
 }
 ```
+
+Machine-readable enum values:
+
+- `technical_conclusion`: `pass | conditional | fail | unknown`
+- `severity`: `blocker | high | medium | low`
+
+Use Chinese labels only in Markdown tables or `*_label` fields.

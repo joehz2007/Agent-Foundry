@@ -23,7 +23,8 @@ For each included PR or changed-file group:
    - Vue, TypeScript, Vite/Webpack, Element Plus/UI files → `code-review-vue`.
 3. If both backend and frontend are touched, run both technical reviews and keep findings separate.
 4. Map each technical finding back to affected task IDs and acceptance criteria when possible.
-5. Final ZenTao conclusion remains with `zentao-execution-code-review`.
+5. Consume machine-readable technical summaries using stable English enums: `technical_conclusion = pass | conditional | fail | unknown`, `severity = blocker | high | medium | low`.
+6. Final ZenTao conclusion remains with `zentao-execution-code-review`.
 
 ## File classification hints
 

@@ -66,28 +66,28 @@ instructions: |
      - Do not replace a missing PR with arbitrary local diff, branch diff, time-window commits, or keyword search.
 
   3. Derive review-baseline.
-     - Follow `review-baseline-schema.md`.
-     - Classify task types using `task-type-checklists.md`; multiple types may apply.
+     - Follow `references/review-baseline-schema.md`.
+     - Classify task types using `references/task-type-checklists.md`; multiple types may apply.
      - Derive `expected_changes`, `anti_pattern_targets`, `reachability_targets`, `scope_modules`, and hard gates.
      - Set `code_scope_confidence` based on PR/diff/repository completeness.
 
   4. Review task alignment and delegate technical review.
      - Read PR diff enough to map changed files to tasks and acceptance criteria. Do not review the whole repository by default.
      - Map each task requirement and acceptance criterion to code evidence or a gap.
-     - Classify changed files and delegate technical implementation review according to `technical-delegation.md`:
+     - Classify changed files and delegate technical implementation review according to `references/technical-delegation.md`:
        - Spring Boot / Java / Kotlin / MyBatis / backend config -> `code-review-spring-boot`.
        - Vue / TypeScript / Vite / Element Plus / frontend route/store/API files -> `code-review-vue`.
      - Consume delegated findings as technical findings; map them back to task IDs when possible.
      - Perform reverse mapping: code changes inside reviewed PRs must be either task-aligned, task-extraneous, orphan, or no-business-risk.
 
   5. Conclude with alignment and technical findings separated.
-     - Use `review-rubric.md`.
+     - Use `references/review-rubric.md`.
      - Keep business-alignment problems separate from delegated technical implementation problems.
      - If a technical finding prevents task acceptance or triggers a hard gate, reflect that in the final task conclusion.
      - If evidence is incomplete, cap the conclusion and explain the limitation.
 
   6. Save reports.
-     - Use `report-structure.md`.
+     - Use `references/report-structure.md`.
      - Full execution: create one directory containing `_summary.md`, one `task-<id>-<slug>.md` per included development/code task,
        and `review-baseline.json`.
      - Single task: create one directory containing `_summary.md` and `review-baseline.json`.
