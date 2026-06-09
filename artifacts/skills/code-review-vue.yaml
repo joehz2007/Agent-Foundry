@@ -1,7 +1,7 @@
 id: code-review-vue
 type: skill
 title: Vue Code Review
-version: 0.1.0
+version: 0.2.0
 description: >-
   Review Vue 2/Vue 3 frontend code, TypeScript, Vite/Webpack, Element Plus/Element UI, forms, routes, permissions,
   component design, state management, API integration, UX states, accessibility basics, and frontend regression risks.
@@ -52,10 +52,12 @@ instructions: |
      - Do not review the whole frontend repository unless asked.
 
   2. Review by frontend dimensions.
-     - Component design: responsibility, props/events, composition API, cleanup.
-     - API/state flow: request/response mapping, loading/error/empty states, stale state, refresh behavior.
+     - Component design: responsibility, props/events, composition API, cleanup, store reset/global error handling.
+     - API/state flow: request/response mapping, loading/error/empty states, stale state, out-of-order/cancelled requests, refresh behavior.
      - Forms: validation, readonly/edit modes, duplicate submit, approval/review flows.
-     - Permission/security: frontend permission as UX only, sensitive data masking, route/action visibility.
+     - Performance/rendering: `v-for` keys, v-if+v-for, virtualization, debounce/throttle, lazy-loaded routes.
+     - Routing: navigation guards, unsaved-changes guard, route param validation.
+     - Permission/security: frontend permission as UX only, XSS (`v-html`/dynamic attrs), token storage/CSRF, sensitive data masking, route/action visibility.
      - UX/regression: dialogs, tables, pagination, exports, mobile/scan flows, existing page behavior.
      - Tests: component/unit/E2E/manual regression evidence for critical flows.
 
@@ -63,7 +65,7 @@ instructions: |
      - Report concrete file/component evidence.
      - Explain user impact and a specific fix.
      - Avoid generic style comments unless they affect maintainability or correctness.
-     - Apply hard gates from `references/checklist.md` for permissions, contract mismatches, stale/duplicate submit, and missing
+     - Apply hard gates from `references/checklist.md` for permissions, XSS, contract mismatches, stale/duplicate submit, async races, and missing
        acceptance behavior.
 
   4. Output.
@@ -78,6 +80,12 @@ resources:
 evals:
   - evals/code-review-vue/sales-unit-form.yaml
 changelog:
+  - version: 0.2.0
+    date: 2026-06-08
+    changes:
+      - Add dimensions for rendering/performance (keys, virtualization, debounce, lazy routes) and routing/navigation guards.
+      - Extend security to XSS (`v-html`/dynamic attrs) and token storage/CSRF; add async out-of-order/cancellation handling and store reset/global error handling.
+      - Add hard gates for XSS, async races, and silent navigation away from unsaved forms.
   - version: 0.1.0
     date: 2026-06-08
     changes:

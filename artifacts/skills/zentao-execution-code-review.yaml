@@ -1,12 +1,15 @@
 id: zentao-execution-code-review
 type: skill
 title: ZenTao Execution Code Review
-version: 1.0.0
+version: 1.2.0
 description: >-
   Perform task-aligned code review using ZenTao execution plans and the rd-audit baseline. Use whenever the user asks to
   review code against 禅道任务, 执行计划, PR links in ZenTao, baseline JSON, or whether implementation matches task
-  requirements. This skill requires PR evidence for included development/code tasks; full-execution review skips tasks
-  without reliable PRs, while single-task review stops and asks for a PR. Prefer this over generic code review when a
+  requirements. This skill requires PR evidence for included development/code tasks. In full-execution review, treat
+  missing PR as a review gap only for completed code tasks (for example `done`/closed/finished) unless the task clearly
+  says no PR is needed, such as configuration-only or non-code work. For `doing`/`wait` tasks, missing PR usually means
+  the task has not entered code review yet and should be skipped without being counted as a defect. Single-task review
+  stops and asks for a PR when the requested task is ready for code review but lacks reliable PR evidence. Prefer this over generic code review when a
   ZenTao task, execution, baseline, or PR-to-task mapping is involved.
 triggers:
   - 按禅道任务 review 代码
@@ -57,12 +60,18 @@ instructions: |
      - Determine full-execution vs single-task mode.
      - Exclude QA/test/verification/regression/canceled tasks from code review unless the user explicitly asks to review test code.
 
-  2. Require PR evidence.
+  2. Require PR evidence, with status-aware handling.
      - Read PRs first from rd-audit baseline `pr_refs`.
      - If missing or suspected incomplete, re-extract from task body, task `raw.actions[].comment`, story body,
        story `raw.actions[].comment`, and attachment text when available; then use user-provided PRs.
-     - Full execution: skip only tasks with missing or unreliable PR and record them in `排除任务`.
-     - Single task: missing or unreliable PR stops the review with a clear request for a PR link/ID.
+     - For completed code tasks (`done`, closed, finished, or equivalent), missing or unreliable PR is a review gap
+       unless the task explicitly states it is non-code/configuration-only/no-PR work. Record it as `已完成但缺少可审PR`.
+     - For in-progress or not-started tasks (`doing`, `wait`, or equivalent), missing PR is normally expected and only
+       means the task is not ready for this code-review run. Skip it with wording such as `进行中，暂无PR属正常` or
+       `未到代码审查阶段` rather than treating it as a defect.
+     - Full execution: include only tasks with reliable PRs; record skipped tasks in `排除任务` with the status-aware reason above.
+     - Single task: missing or unreliable PR stops the review only when the task is completed or the user explicitly asks
+       to review it now; otherwise state that it is not ready for code review yet.
      - Do not replace a missing PR with arbitrary local diff, branch diff, time-window commits, or keyword search.
 
   3. Derive review-baseline.
@@ -108,6 +117,10 @@ evals:
   - evals/zentao-execution-code-review/full-execution-with-missing-pr.yaml
   - evals/zentao-execution-code-review/payment-task-review.yaml
 changelog:
+  - version: 1.2.0
+    date: 2026-06-09
+    changes:
+      - Adds status-aware PR handling: done/finished code tasks should have PR evidence unless explicitly non-code/no-PR; doing/wait tasks without PR are skipped as not ready, not treated as defects.
   - version: 1.1.0
     date: 2026-06-08
     changes:

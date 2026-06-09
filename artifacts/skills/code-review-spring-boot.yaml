@@ -1,7 +1,7 @@
 id: code-review-spring-boot
 type: skill
 title: Spring Boot Code Review
-version: 0.1.0
+version: 0.2.0
 description: >-
   Review Java/Kotlin Spring Boot backend code for production-grade technical correctness: API/controller design,
   service-layer business logic, transaction boundaries, idempotency, SQL/repository safety, authorization, validation,
@@ -51,18 +51,21 @@ instructions: |
      - Read surrounding controller/service/repository/config/test files needed to understand the changed code.
 
   2. Review by backend dimensions.
-     - API/controller: validation, auth, response compatibility, error handling.
+     - API/controller: validation, auth, response compatibility, error handling, mass-assignment/over-posting.
      - Service/business logic: transaction boundary, idempotency, state transitions, external side effects.
-     - Persistence: tenant/merchant/user isolation, SQL correctness, indexes, N+1, unbounded queries.
-     - Security: authorization, sensitive data, secrets, unsafe crypto/TLS.
-     - Observability/config: logs, metrics, actuator exposure, safe defaults.
+     - Concurrency/consistency: locking or version for shared state, lost-update vs duplicate-submit, distributed locks.
+     - Money/amount: BigDecimal vs float, rounding mode, currency, comparison.
+     - Persistence: tenant/merchant/user isolation, SQL correctness, MyBatis `${}` injection, indexes, N+1, unbounded queries.
+     - Resilience/cache: external-call timeouts, circuit breaker/fallback, cache consistency and invalidation.
+     - Security: authorization, sensitive data, secrets, unsafe deserialization/SSRF, unsafe crypto/TLS.
+     - Observability/config: logs, metrics, actuator exposure, tracing, safe defaults.
      - Tests: meaningful coverage for success, failure, boundary, retry, rollback, and authorization paths.
 
   3. Prioritize findings.
      - Report concrete file/line evidence when available.
      - Explain impact and a specific fix.
      - Do not list generic checklist items with no evidence.
-     - Apply hard gates from `references/checklist.md` for money movement, authorization, and consistency risks.
+     - Apply hard gates from `references/checklist.md` for money movement, authorization, injection, concurrency, and consistency risks.
 
   4. Output.
      - Use `references/report-structure.md`.
@@ -76,6 +79,12 @@ resources:
 evals:
   - evals/code-review-spring-boot/refund-transaction.yaml
 changelog:
+  - version: 0.2.0
+    date: 2026-06-08
+    changes:
+      - Add dimensions for SQL/MyBatis injection, money/decimal precision, concurrency and locking, external-call resilience, and caching.
+      - Extend security to mass assignment, unsafe deserialization, and SSRF/path traversal.
+      - Add hard gates for `${}` injection, float money, lock-less concurrent updates, and missing call timeouts.
   - version: 0.1.0
     date: 2026-06-08
     changes:

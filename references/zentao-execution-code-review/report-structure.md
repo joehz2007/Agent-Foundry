@@ -67,7 +67,7 @@ Rows required:
 
 | 条件 | 状态 | 对结论的影响 |
 
-List skipped tasks, missing PR, unavailable comments/attachments, incomplete repository checkout, unavailable tests, and external docs that could not be fetched.
+List skipped tasks, status-aware missing PR conditions, unavailable comments/attachments, incomplete repository checkout, unavailable tests, and external docs that could not be fetched. Distinguish completed code tasks that lack PR evidence from `doing`/`wait` tasks that are simply not ready for code review yet.
 
 ### 任务到代码映射
 
@@ -89,7 +89,11 @@ Use rows for `code-review-spring-boot` and/or `code-review-vue` when delegated r
 
 | 任务ID | 任务 | 状态 | 排除原因 |
 
-Development/code tasks excluded due to missing/unreliable PR must explicitly say `缺少PR` or `PR关联不清`.
+Use status-aware PR wording:
+
+- Completed code tasks (`done`/closed/finished or equivalent) excluded due to missing/unreliable PR must explicitly say `已完成但缺少可审PR` or `PR关联不清`, unless the task states it is configuration-only/non-code/no-PR work.
+- In-progress or not-started tasks (`doing`/`wait` or equivalent) without PR should not be reported as a defect; use `进行中，暂无PR属正常，本轮不做代码一致性结论` or `未到代码审查阶段，暂无PR属正常`.
+- If a completed task says it only involves configuration/manual/non-code work, write that evidence instead of requiring a PR.
 
 ### 反向映射核对
 
