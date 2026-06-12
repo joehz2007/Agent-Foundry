@@ -1,7 +1,7 @@
 id: zentao-execution-code-review
 type: skill
 title: ZenTao Execution Code Review
-version: 1.2.0
+version: 1.2.1
 description: >-
   Perform task-aligned code review using ZenTao execution plans and the rd-audit baseline. Use whenever the user asks to
   review code against 禅道任务, 执行计划, PR links in ZenTao, baseline JSON, or whether implementation matches task
@@ -31,9 +31,6 @@ outputs:
     - summary_report
     - per_task_reports
     - review_baseline_json
-platforms:
-  claude-code:
-    tools: [Read, Grep, Glob, Bash, Write]
 instructions: |
   You orchestrate code review against ZenTao task facts. Your core question is: does the actual code change satisfy the
   task baseline without introducing extra, unmapped, or risky behavior? You own business/task alignment. Delegate deep
@@ -117,6 +114,10 @@ evals:
   - evals/zentao-execution-code-review/full-execution-with-missing-pr.yaml
   - evals/zentao-execution-code-review/payment-task-review.yaml
 changelog:
+  - version: 1.2.1
+    date: 2026-06-11
+    changes:
+      - Removed Claude Code allowed-tools restriction so ZenTao MCP tools remain available for PR/task refresh.
   - version: 1.2.0
     date: 2026-06-09
     changes:

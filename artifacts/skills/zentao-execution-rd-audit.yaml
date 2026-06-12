@@ -1,7 +1,7 @@
 id: zentao-execution-rd-audit
 type: skill
 title: ZenTao Execution RD Audit
-version: 1.0.0
+version: 1.0.3
 description: >-
   Audit ZenTao execution plans, iterations, tasks, stories, comments, PR links, and attachments to decide whether task
   descriptions are sufficient for development, testing, and code review. Use whenever the user asks about 禅道任务,
@@ -30,9 +30,6 @@ outputs:
     - changelog
     - five_line_summary
     - baseline_json
-platforms:
-  claude-code:
-    tools: [Read, Grep, Glob, Bash, Write]
 instructions: |
   You audit ZenTao execution plans into an engineering baseline. Your job is not to judge people; your job is to make
   task facts reliable enough for development, testing, and code review.
@@ -62,6 +59,13 @@ instructions: |
   2. Read data and capability status.
      - Check whether task body, `task.raw.actions`, story body, `story.raw.actions`, task attachments, and story attachments are available.
      - Extract comments/history from `raw.actions[]`; do not require a standalone comments tool.
+     - For attachments, download and parse text-like attachments by default: `.md`, `.markdown`, `.txt`, `.html`, `.htm`,
+       `.json`, `.yaml`, `.yml`, `.xml`, `.csv`, `.log`, and `.eml`. ZenTao may report these as `extension=txt` while
+       the title ends in `.md`; infer text-likeness from both title and extension. Do not attempt binary/OCR parsing for
+       `.docx`, `.pdf`, `.xlsx`, images, archives, or unknown binary formats unless the user explicitly asks.
+     - Incorporate parsed text attachment content into requirements, acceptance criteria, implementation hints, risks,
+       PR extraction, and open questions. For skipped binary attachments, keep attachment metadata in `attachment_refs`
+       and mark content as not read.
      - Record capability status in the main report and baseline JSON.
      - If MCP is unavailable, ask for exported files or proceed only when the user supplied local data; label the result
        as non-MCP and lower confidence.
@@ -73,8 +77,9 @@ instructions: |
      - Determine whether the task can support development, code review, and test design separately.
 
   4. Build outputs.
-     - Full audit creates exactly four files by default: main report, changelog, five-line summary, and baseline JSON.
-     - Use `references/report-structure.md` for section order and table columns.
+     - Full audit creates exactly four files by default under `reports/zentao-rd-audit/`: main report, changelog,
+       five-line summary, and baseline JSON.
+     - Use `references/report-structure.md` for output directory, filename slug rules, section order, and table columns.
      - Use `references/baseline-schema.md` for JSON fields and status values.
      - If comparing with a previous report, only list real rating changes in `本次评级变化`; put older/non-window fixes under
        `历史关键修正`.
@@ -99,6 +104,19 @@ evals:
   - evals/zentao-execution-rd-audit/latest-execution.yaml
   - evals/zentao-execution-rd-audit/missing-comments.yaml
 changelog:
+  - version: 1.0.3
+    date: 2026-06-11
+    changes:
+      - Added explicit mapping between report table values (是否有附件/是否有PR) and baseline JSON enums in report-structure.md.
+  - version: 1.0.2
+    date: 2026-06-11
+    changes:
+      - Added default parsing for text-like ZenTao attachments and explicit skipping rules for binary attachments.
+  - version: 1.0.1
+    date: 2026-06-11
+    changes:
+      - Removed Claude Code allowed-tools restriction so ZenTao MCP tools remain available.
+      - Clarified RD output directory and delegated filename rules to report-structure.md.
   - version: 1.0.0
     date: 2026-06-05
     changes:

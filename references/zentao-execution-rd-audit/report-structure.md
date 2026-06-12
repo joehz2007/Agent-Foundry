@@ -1,11 +1,15 @@
 # RD audit report structure
 
-Full audit outputs four files by default:
+Full audit outputs four files by default under `reports/zentao-rd-audit/`:
 
-1. Main audit report: `zentao-execution-plan-audit-<execution>-<yyyymmdd>.md`
-2. Changelog: `zentao-execution-plan-audit-<execution>-<yyyymmdd>-changelog.md`
-3. Five-line summary: `zentao-execution-plan-audit-<execution>-<yyyymmdd>-summary.md`
-4. Baseline JSON: `zentao-execution-plan-audit-<execution>-<yyyymmdd>-baseline.json`
+1. Main audit report: `zentao-execution-plan-audit-<execution_slug>-<yyyymmdd>.md`
+2. Changelog: `zentao-execution-plan-audit-<execution_slug>-<yyyymmdd>-changelog.md`
+3. Five-line summary: `zentao-execution-plan-audit-<execution_slug>-<yyyymmdd>-summary.md`
+4. Baseline JSON: `zentao-execution-plan-audit-<execution_slug>-<yyyymmdd>-baseline.json`
+
+`<execution_slug>` should be the ZenTao execution name slugified for filenames, for example `v20260617`. If the name
+contains spaces, slashes, or other unsafe characters, replace each run of unsafe characters with `-`. If the execution
+name is missing or ambiguous, use `execution-<execution_id>`.
 
 ## Main report sections
 
@@ -15,11 +19,17 @@ Use this order:
 2. 数据来源与能力边界
 3. 任务状态汇总
 4. 审计结论
-5. 任务完备性审计表
+5. 任务完备性审计表（包含“开发任务审计表”和“测试任务审计表”两个子表）
 6. 责任归属表
 7. 可直接作为基线的任务
 8. 仍需补充的关键信息
 9. 一句话结论
+
+## Previous report lookup
+
+For comparison audits, search `reports/zentao-rd-audit/` first. Use Glob patterns such as
+`zentao-execution-plan-audit-<execution_slug>-*.md`, exclude `*-summary.md` and `*-changelog.md`, and choose the latest
+report before the current audit date. If the user supplied an explicit previous report, use that instead.
 
 ## Required tables
 
@@ -58,6 +68,7 @@ Rules:
 - Sort each audit table by rating `A > B > C > N/A`, then task ID ascending.
 - Use fixed values: `是否有附件 = 是 / 否 / 有但未核验 / 有（N个）`; `是否有PR = 是 / 否 / 链接无效 / 评论未核验 / 是（N个）`.
 - Only use `评论未核验` when task/story `raw.actions` cannot be read. If `raw.actions` is read and no PR appears in task/story bodies, action comments, or attachments, use `否`.
+- Table values map to baseline JSON as follows. `是否有附件`: `是`/`有（N个）` = `attachment_status: yes`, `否` = `no`, `有但未核验` = `unverified`. `是否有PR`: `是`/`是（N个）` = `pr_status: yes`, `否` = `no`, `链接无效` = `invalid`, `评论未核验` = `unverified`. Table and JSON must agree for every task.
 - Keep `简评` short and evidence-based.
 
 ### 责任归属表
