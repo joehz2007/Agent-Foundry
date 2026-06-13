@@ -1,0 +1,14 @@
+id: edited-comment-and-pr-retarget
+artifact: zentao-execution-review
+prompt: >-
+  增量审查这个执行计划。上次审查后没有新增评论，但任务 1024 的一条旧评论被原地编辑（action 数量和最后 action ID 都没变）；
+  任务 1031 的 PR 被改了目标分支（head commit 没变）。其他任务无变化。
+expected_output: >-
+  任务 1024 通过 actions hash 变化（而 count/last id 不变）识别为描述变更，定位被编辑的 action，用上次 baseline 事实
+  对比给出旧/新内容差异，并重审描述与代码；任务 1031 通过 pr_targets 变化识别为代码变更（head 未变也要重审代码，
+  描述层复用）；其余任务复用；指纹计算前先刷新远端状态。
+assertions:
+  - Detects the edited comment via actions hash with unchanged count/last action id, and reports old vs new content using the previous baseline when the original text is unretrievable.
+  - Detects the PR retarget via pr_targets and re-reviews that task's code although pr_heads are unchanged.
+  - Fetches/refreshes remote state before fingerprinting instead of trusting a stale local clone.
+  - Computes the actions hash over actions sorted by action ID, not response array order.

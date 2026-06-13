@@ -28,3 +28,7 @@ assets:
     type: skill
     path: artifacts/skills/zentao-execution-code-review.yaml
     targets: [claude-code, codex, pi]
+  - id: zentao-execution-review
+    type: skill
+    path: artifacts/skills/zentao-execution-review.yaml
+    targets: [claude-code, codex, pi]

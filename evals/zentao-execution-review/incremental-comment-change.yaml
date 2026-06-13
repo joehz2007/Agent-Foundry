@@ -1,0 +1,15 @@
+id: incremental-comment-change
+artifact: zentao-execution-review
+prompt: >-
+  再审一遍这个执行计划。上次审查后，任务 1024 的评论里补充了一条新的验收标准，但它的 PR 没有新提交；
+  其他任务的描述和 PR 都没有变化。
+expected_output: >-
+  对比 review-state.json 指纹后将任务 1024 分类为描述变更：重审其描述并按新基线重审代码（即使 PR head 未变）；
+  其余无变化任务复用上次的评级和 review 结论并标注复用日期；changes.md 引用新评论的 action ID/日期/作者及内容；
+  更新 review-state.json 中 1024 的指纹。
+assertions:
+  - Classifies the task with a new comment as 描述变更 via action count/last action id/actions hash, not by guessing.
+  - Re-runs code review for that task although PR heads and target branches are unchanged, because the acceptance baseline changed.
+  - Reuses previous conclusions verbatim from last_report_dir's rd-baseline.json/review-baseline.json, marked 复用 with the original date.
+  - Quotes the new comment content (action id, date, author) in changes.md instead of only saying "评论有变化".
+  - Final reply gives three separate count groups (变更类型 / 描述审查动作 / 代码审查动作), not one collapsed list.

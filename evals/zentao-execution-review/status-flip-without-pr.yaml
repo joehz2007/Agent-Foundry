@@ -1,0 +1,14 @@
+id: status-flip-without-pr
+artifact: zentao-execution-review
+prompt: >-
+  增量审查这个执行计划。任务 1040 上次审查时是 doing 且没有 PR（当时按"进行中，暂无PR属正常"跳过了代码审查）。
+  本次它的状态变成了 done，仍然没有 PR；正文、附件、评论、PR 集合都没有任何变化。其他任务无变化。
+expected_output: >-
+  任务 1040 通过任务元数据（status）变化识别为描述变更，重新执行 status-aware PR gate：结论应为
+  "已完成但缺少可审PR"（review_scope_status = excluded_completed_missing_pr），绝不能复用上次的跳过结论；
+  changes.md 记录 status: doing → done 及 gate 后果（由跳过转为缺口）；其余任务正常复用。
+assertions:
+  - Detects the status transition via task metadata fingerprint although body/attachments/comments/PRs are unchanged.
+  - Re-runs the status-aware PR gate and concludes 已完成但缺少可审PR instead of reusing the previous 进行中暂无PR属正常 skip.
+  - Records the metadata change in changes.md as old → new (status doing → done) with the gate consequence.
+  - Still reuses conclusions for the genuinely unchanged tasks.

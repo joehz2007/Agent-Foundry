@@ -1,0 +1,15 @@
+id: missing-baseline-and-degraded-deps
+artifact: zentao-execution-review
+prompt: >-
+  增量审查这个执行计划。review-state.json 还在（schema_version 1.0，缺少新指纹字段），但 last_report_dir 里的
+  review-baseline.json 被误删了；当前环境里 zentao-execution-code-review skill 加载不了，code-review-vue 也不可用，
+  本次有任务涉及 Vue 前端改动。
+expected_output: >-
+  对 1.0 旧 state：缺失的指纹来源按变化未知保守重审，运行后以 1.1 schema 回写；review-baseline.json 缺失则禁止复用
+  代码审查结论，相关任务降级为重审并在报告中注明；code-review skill 不可加载时按 bundled references 做规则层 fallback；
+  Vue 深度技术审查层因专业 skill 不可用而跳过或对相关任务结论降置信度，并在报告中明确说明。
+assertions:
+  - Treats sources covered by missing 1.0 fingerprint fields as 变化未知 and conservatively re-runs, then writes the state back as schema 1.1.
+  - Forbids reusing code-review conclusions when the previous review-baseline.json is missing, downgrading to re-review with the missing file noted.
+  - Falls back to bundled zentao-execution-code-review references for the rule layer instead of improvising or aborting the whole run.
+  - Skips or confidence-caps the Vue technical layer because the specialized reviewer skill is unavailable, and says so in the report.

@@ -1,0 +1,229 @@
+id: zentao-execution-review
+type: skill
+title: ZenTao Execution Review (One-Shot Orchestrator)
+version: 1.3.0
+description: >-
+  One-shot orchestrated review of a ZenTao execution plan: audit every task description (delegating to
+  zentao-execution-rd-audit), then code-review tasks that have PR evidence (delegating to zentao-execution-code-review),
+  with fingerprint-based change detection against the previous review, plus an owner-based workload/quality contribution
+  report. Use whenever the user asks to 一键审查执行计划, 审查整个迭代的任务和代码, 增量审查, 检查任务描述或PR有没有变化再审,
+  评价责任人工作量/工作质量/贡献, or wants description audit and code review done together based on the latest task body,
+  attachments, comments, and code. Prefer this skill over running rd-audit or code-review separately when the user wants
+  both layers in one pass, asks what changed since the last review, or wants a per-owner contribution summary for the execution.
+triggers:
+  - 一键审查执行计划
+  - 执行计划一键审查
+  - 增量审查迭代
+  - 任务和代码一起审
+  - 检查任务变化并重审
+  - 对比上次审查变化
+  - 评价责任人贡献
+  - 统计任务工作量和质量
+  - zentao execution review
+  - one-shot zentao review
+targets: [claude-code, codex, pi]
+inputs:
+  - zentao_project_or_execution_or_task
+  - previous_review_state
+  - mcp_tool_results
+  - pr_links
+  - repository_or_diff
+outputs:
+  format: markdown_and_json
+  sections:
+    - combined_summary_report
+    - change_report
+    - merged_rd_baseline_json
+    - merged_review_baseline_json
+    - per_task_review_reports
+    - owner_contribution_report_md
+    - review_state_json
+instructions: |
+  You orchestrate a complete, change-aware review of a ZenTao execution plan in one pass. For every in-scope task:
+  audit the description first; if the task has reliable PR evidence, review the code against the audited baseline;
+  otherwise skip code review with a status-aware reason. Every conclusion must be based on the latest description
+  (body, attachments, comments) and the latest code, and every difference from the previous review must be reported.
+
+  Responsibility boundary:
+  - `zentao-execution-rd-audit` owns description-quality evaluation: ratings, baseline facts, rubric. Apply its skill
+    (rubric, MCP capability probing, attachment parsing, comment extraction from `raw.actions[]`) for the description
+    layer. Do not re-invent rating logic here.
+  - `zentao-execution-code-review` owns code review: status-aware PR handling, review-baseline derivation, task
+    alignment, reverse mapping, and technical delegation to `code-review-spring-boot` / `code-review-vue`. Apply its
+    skill for the code layer. Do not relax its PR-evidence requirements.
+  - This skill owns: change detection, the `review-state.json` fingerprint file, the re-run/reuse decision per task,
+    merging fresh and reused results into one consistent output, and the combined report.
+
+  Dependencies, in order of preference:
+  - Load `zentao-execution-rd-audit` and `zentao-execution-code-review` as skills when available.
+  - If one cannot be loaded, its bundled key references under `references/zentao-execution-rd-audit/` and
+    `references/zentao-execution-code-review/` are an acceptable rule-layer fallback for that layer.
+  - If neither the skill nor its bundled references are accessible for a layer, stop and report the missing dependency
+    instead of improvising that layer's rules.
+  - Deep technical review is a separate dependency: when touched code calls for `code-review-spring-boot` or
+    `code-review-vue` and that specialized skill is unavailable, skip that technical layer or cap the affected tasks'
+    conclusions and confidence, and say so in the report — bundled references do not replace the specialized reviewers.
+
+  Workflow:
+  1. Lock scope.
+     - Full-execution mode (default): user names an execution/iteration or asks to review the latest one; resolve the
+       target the same way rd-audit does (explicit IDs first, otherwise latest active project/execution via ZenTao MCP).
+     - Single-task mode: user names one task ID; run the same pipeline scoped to that task.
+
+  2. Load previous state and previous results.
+     - Read `reports/zentao-execution-review/<execution_slug>/review-state.json` per
+       `references/review-state-schema.md`.
+     - Read `last_report_dir` from the state and load the previous run's `rd-baseline.json` and `review-baseline.json`
+       from it. These files are the only legal source for verbatim reuse. If either is missing or unreadable, reuse is
+       forbidden for the entries it would have provided: downgrade the affected tasks to re-audit/re-review and note
+       the missing file in the report.
+     - Missing/unparseable state file means first review: every task is `首次审查`. Back up an unparseable file before
+       replacing it.
+
+  3. Fetch latest facts and compute fingerprints.
+     - Probe MCP capability and pull task body, task `raw.actions[]`, linked story body, story `raw.actions[]`, and
+       attachment metadata for every in-scope task; parse text-like attachments following rd-audit's rules.
+     - Extract all PR refs from every source. Refresh code evidence before fingerprinting: `git fetch` the relevant
+       remotes or query the PR platform so head SHAs, target branches, and diffs reflect the current remote state,
+       never a stale local clone. Then resolve each PR's head commit SHA and target branch when repo tooling allows.
+     - Compute fingerprints and classify each task's `change_type` per
+       `references/change-detection.md`. Unverifiable sources are `unknown`, never `unchanged`.
+
+  4. Description audit layer.
+     - Re-audit tasks classified `首次审查 / 描述变更 / 描述+代码变更 / 变化未知` using the rd-audit skill, scoped to
+       those tasks. Reuse previous merged-baseline entries verbatim for the rest.
+     - Produce the merged `rd-baseline.json` (rd-audit baseline schema, unchanged) covering ALL in-scope tasks, so the
+       code-review layer always consumes a complete, current baseline.
+
+  5. Code review layer.
+     - Apply the re-run decision matrix in `change-detection.md`: review tasks that are new or whose description or code
+       changed; a changed description forces code re-review even when no commit changed, because the acceptance baseline
+       may have moved.
+     - Gate everything through code-review's status-aware PR rules: no reliable PR means skip (`进行中，暂无PR属正常` /
+       `未到代码审查阶段`) or, for completed code tasks, the gap `已完成但缺少可审PR`. Never substitute arbitrary local
+       diffs for a missing PR.
+     - Reuse previous review conclusions verbatim for unchanged tasks, marked `复用 <date> 结论`.
+     - Produce the merged `review-baseline.json` and per-task reports for tasks reviewed this run.
+
+  6. Owner contribution layer.
+     - For full-execution runs, generate `owner-contribution.md` following `references/owner-contribution.md`.
+     - Evaluate workload and execution quality by responsible owner against ONE unified measurement standard for all
+       owners: score only from objective, verifiable evidence (effective git diff stats after fetch, PR/repo/module
+       scope, code-review outcomes, rd-audit readiness ratings, factual task metadata); band continuous metrics relative
+       to THIS iteration's distribution (quantiles), not absolute thresholds; derive difficulty from a fixed checklist
+       with cited hit signals. Self-reported effort (estimate/consumed/left) is excluded by design — never display it,
+       use it only as a silent cross-check and flag `工时与代码量不一致，存疑` on gross divergence. Output multi-dimension
+       labels with evidence; do NOT compute a single composite contribution score or rank people by a number. Include
+       reused conclusions as evidence but mark the reuse date. This is a contribution summary, not an HR appraisal.
+     - Use type-specific dimensions: development tasks are measured by effective code volume + difficulty; test tasks are
+       NOT measured by code volume but by 用例规模, 被测对象复杂度 (from the linked story/dev rd-audit baseline), 测试难度,
+       缺陷发现成效 (bugs via `zentao_list_bugs`/`zentao_get_bug`, severity- and validity-weighted, discounting 误报),
+       自动化贡献, and 覆盖完整性. Mark `用例数未核验` when the case API is unavailable; never reward raw case/bug count.
+     - Attribute development to the ACTUAL code author from git (feature/`task/<id>` branch authorship), NOT ZenTao
+       `assignedTo` or the bare `owner` field — `assignedTo` flips to the tester when a finished dev task moves to QA, so
+       attributing by it credits testers with developers' code. When git author disagrees with rd owner, flag
+       `归属待确认`; a pure test owner who only received finished tasks for testing has no development workload.
+     - Numeric scoring is opt-in: when the user wants quantitative/KPI metrics, follow `references/contribution-metrics.md`
+       — index every metric to the iteration's same-role median (plus a personal rolling baseline for trend), output dual
+       indices (WLI/QI) as primary, and if a composite is requested make it MULTIPLICATIVE `C = WLI × clamp(QI/100,0.5,1.3)`,
+       never an additive weighted sum. Persist `contribution-metrics.json` for cross-iteration trend. Keep the KPI guardrails:
+       team-level for KPI, individual indices for trend/coaching only, low-confidence numbers excluded.
+     - Single-task runs skip this file unless the user explicitly asks for owner evaluation.
+
+  7. Report and persist.
+     - Write the dated run directory (`_summary.md`, `changes.md`, `owner-contribution.md`, both merged baselines,
+       per-task files) following `references/report-structure.md`.
+     - `changes.md` must say WHAT changed: semantic body diffs, new attachments by name, new comments quoted with action
+       ID/date/author, PR additions/removals, and commit movement per PR.
+     - Update `review-state.json` only after the reports were written successfully. Single-task runs update only that
+       task's entry and answer in the conversation unless files are requested.
+
+  8. Final reply: report paths (including `owner-contribution.md` for full runs); three separate count groups —
+     变更类型（首次/描述变更/代码变更/描述+代码变更/无变化/变化未知/已移除）, 描述审查动作（重审/复用/不适用）,
+     代码审查动作（重审/复用/跳过/缺口/不适用）; top 3 changes, top 3 findings or gaps, top owner-contribution
+     observations, and any evidence that could not be verified.
+
+  If the user explicitly asks for a full re-review, treat every task as `描述+代码变更` and skip reuse. If ZenTao MCP is
+  unavailable, fall back to user-supplied exports per rd-audit's rules, label results as non-MCP, and do not update
+  fingerprints for sources you could not actually read.
+resources:
+  references:
+    - references/zentao-execution-review/review-state-schema.md
+    - references/zentao-execution-review/change-detection.md
+    - references/zentao-execution-review/report-structure.md
+    - references/zentao-execution-review/owner-contribution.md
+    - references/zentao-execution-review/contribution-metrics.md
+    - references/zentao-execution-rd-audit/mcp-capability.md
+    - references/zentao-execution-rd-audit/rubric.md
+    - references/zentao-execution-rd-audit/baseline-schema.md
+    - references/zentao-execution-rd-audit/report-structure.md
+    - references/zentao-execution-code-review/review-baseline-schema.md
+    - references/zentao-execution-code-review/task-type-checklists.md
+    - references/zentao-execution-code-review/review-rubric.md
+    - references/zentao-execution-code-review/technical-delegation.md
+    - references/zentao-execution-code-review/report-structure.md
+  scripts: []
+evals:
+  - evals/zentao-execution-review/first-run-one-shot.yaml
+  - evals/zentao-execution-review/incremental-comment-change.yaml
+  - evals/zentao-execution-review/edited-comment-and-pr-retarget.yaml
+  - evals/zentao-execution-review/missing-baseline-and-degraded-deps.yaml
+  - evals/zentao-execution-review/status-flip-without-pr.yaml
+  - evals/zentao-execution-review/owner-contribution-report.yaml
+changelog:
+  - version: 1.3.0
+    date: 2026-06-13
+    changes:
+      - Added references/contribution-metrics.md — opt-in numeric contribution indices (WLI/QI), iteration-median + personal-rolling baselines, confidence gating, and cross-iteration trend persistence as a KPI foundation.
+      - Composite contribution score is now MULTIPLICATIVE (C = WLI × clamp(QI/100,0.5,1.3)); additive weighted sums are forbidden because they let a quality rate substitute for work amount (a 2%-workload task scoring near a huge load).
+      - Attribution rule: development is attributed to the actual git code author, never ZenTao assignedTo (which flips to the tester on QA handoff) or the bare owner field; author/owner disagreements are flagged 归属待确认; pure test owners get no dev workload.
+  - version: 1.2.0
+    date: 2026-06-13
+    changes:
+      - Owner contribution now uses one unified measurement standard for all owners: objective verifiable evidence only, iteration-relative (quantile) normalization, and a fixed difficulty checklist with cited hit signals.
+      - Self-reported ZenTao effort (estimate/consumed/left) is excluded from scoring and never displayed; kept only as a silent cross-check that flags divergence from objective code volume.
+      - Output is multi-dimension labels with evidence; single composite contribution score / numeric ranking is explicitly forbidden.
+      - Added 归一化基准 section to the report structure and dropped the 工时 column from the contribution overview table.
+      - Added a type-specific test-task evaluation model: 用例规模, 被测对象复杂度 (from the linked story/dev rd-audit baseline), 测试难度, 缺陷发现成效 (severity/validity-weighted bugs, discounting 误报), 自动化贡献, 覆盖完整性 — test tasks are no longer measured by code volume.
+      - Added test/defect-finding quality evidence (valid bug yield, 误报率, regression catch, coverage gaps) and an optional 测试责任人贡献总览 table.
+  - version: 1.1.1
+    date: 2026-06-12
+    changes:
+      - Refined owner contribution workload evaluation for development tasks: code volume and technical/business difficulty must be assessed separately, with unavailable diff stats explicitly marked.
+  - version: 1.1.0
+    date: 2026-06-12
+    changes:
+      - Added owner-contribution.md as a separate full-execution report for responsible-owner workload, quality, and contribution evaluation.
+      - Defines evidence-based attribution, workload/complexity metrics, description quality and implementation quality dimensions, and cautious non-HR wording.
+  - version: 1.0.3
+    date: 2026-06-12
+    changes:
+      - Task metadata (status/type/title/owner) is now a fingerprint source (state schema 1.2); metadata-only changes classify as 描述变更.
+      - Status transitions must re-run the status-aware PR gate; previous skip conclusions are never reused across them (doing→done without PR now yields 已完成但缺少可审PR).
+      - PR retarget reporting rule: report old_target → new_target and note the effective diff may change with an unchanged head.
+      - Final-reply unverifiable-evidence list extended to PR heads/targets and remote refresh/fetch status.
+      - Added status-flip-without-pr eval.
+  - version: 1.0.2
+    date: 2026-06-12
+    changes:
+      - review-state schema bumped to 1.1 with explicit migration: entries missing the new fingerprint fields are treated as 变化未知 and conservatively re-run, then written back in 1.1 shape.
+      - Actions hash is computed over actions sorted by action ID (stable fallback ordering), not response array order.
+      - Added reporting rule for in-place edited comments (hash changed, count/last-id unchanged), reconstructing the old side from the previous baseline.
+      - Clarified dependency semantics: prefer skills, bundled references are a rule-layer fallback, and missing specialized Spring/Vue reviewers skip or confidence-cap the technical layer.
+      - Summary 数据来源 table now records PR head/target resolution and remote refresh (fetch) status.
+      - Added evals for edited comments + PR retarget and missing previous baseline + degraded dependencies.
+  - version: 1.0.1
+    date: 2026-06-12
+    changes:
+      - Fixed in-skill reference paths to match the bundled (stripped) layout used by the build.
+      - Workflow now explicitly loads previous rd-baseline.json/review-baseline.json from last_report_dir; reuse is forbidden and downgraded to re-review when they are missing.
+      - Added task/story actions hashes so edited comments are detected, not only added/removed ones.
+      - Track PR target branches and require fetching latest remote state before fingerprinting code evidence.
+      - Declared hard dependency on rd-audit and code-review skills and bundled their key downstream references as fallback.
+      - Final reply counts split into 变更类型 / 描述审查动作 / 代码审查动作 three groups.
+  - version: 1.0.0
+    date: 2026-06-12
+    changes:
+      - Initial orchestrator over zentao-execution-rd-audit and zentao-execution-code-review.
+      - Fingerprint-based change detection (body, story, attachments, comments, PR set, PR heads) via review-state.json.
+      - Incremental reuse for unchanged tasks; changed descriptions force code re-review against the new baseline.

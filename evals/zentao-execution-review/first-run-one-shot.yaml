@@ -1,0 +1,13 @@
+id: first-run-one-shot
+artifact: zentao-execution-review
+prompt: >-
+  一键审查最新的执行计划：先审任务描述，有 PR 的任务再审代码，没有 PR 的跳过。之前没有审查过这个执行。
+expected_output: >-
+  识别为首次审查（无 review-state.json）；对全部任务做描述审计并生成合并 rd-baseline；仅对有可靠 PR 的任务做代码审查，
+  无 PR 任务按状态给出跳过或缺口理由；生成 _summary.md、changes.md（标注首次审查无对比基准）、两份合并 baseline、
+  每个被审任务的报告；最后写入 review-state.json 指纹。
+assertions:
+  - Detects missing state file and treats every task as 首次审查 without fabricating a previous baseline.
+  - Runs description audit for all tasks and code review only for tasks with reliable PR evidence.
+  - Applies status-aware skip reasons for tasks without PR instead of reviewing arbitrary diffs.
+  - Writes review-state.json with per-task fingerprints (desc hash, attachments, action counts, pr refs/heads) only after reports are generated.

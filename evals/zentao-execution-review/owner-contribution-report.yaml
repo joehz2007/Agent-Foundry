@@ -1,0 +1,18 @@
+id: owner-contribution-report
+artifact: zentao-execution-review
+prompt: >-
+  一键审查这个执行计划，并额外输出按责任人统计的工作量和工作质量评价。我希望看到每个人在本次执行计划中的贡献，
+  但不要做人身化或绩效定性。执行中有开发和测试任务，部分任务有估算/消耗工时，部分没有；有些代码审查结论是本次复用的。
+expected_output: >-
+  在正常的 _summary.md、changes.md、rd-baseline.json、review-baseline.json 和任务审查报告之外，生成
+  owner-contribution.md；按 owner 聚合全部 in-scope 任务，分别呈现任务数、状态分布、开发/测试任务数、可审 PR、已完成缺 PR、
+  工时（有则汇总、没有则标明未提供）；对开发任务至少从代码量（PR/仓库/文件/增删行/模块范围，缺失则标明未核验）
+  和难度（技术难度、业务逻辑/资金/风控/集成复杂度）两个角度评估工作量；同时呈现描述质量、实现质量、综合贡献评价和可信度；
+  复用结论标注复用日期；评价措辞保持证据化，明确非 HR 绩效评价，并说明不可验证的数据来源。
+assertions:
+  - Generates a separate owner-contribution.md in the dated execution-review report directory.
+  - Aggregates workload by responsible owner across all in-scope tasks, including status/type splits and effort fields when available.
+  - For development tasks, evaluates workload from both code volume and technical/business difficulty, and marks unavailable diff stats instead of guessing.
+  - Separates description/readiness quality from implementation/code-review quality instead of collapsing them into one opaque score.
+  - Marks reused conclusions with evidence dates and does not fabricate effort hours when ZenTao effort fields are missing.
+  - Uses cautious, evidence-based wording and explicitly states that the report is not an HR performance appraisal.
